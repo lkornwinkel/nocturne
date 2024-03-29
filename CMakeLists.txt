@@ -1,0 +1,96 @@
+cmake_minimum_required(VERSION 3.27)
+project(nocturne)
+set(CMAKE_CXX_STANDARD 23)
+
+set(NOCTURNE_VERSION_MAJOR 0)
+set(NOCTURNE_VERSION_MINOR 0)
+set(NOCTURNE_VERSION_PATCH 1)
+
+set(NOCTURNE_VERSION "${NOCTURNE_VERSION_MAJOR}.${NOCTURNE_VERSION_MINOR}.${NOCTURNE_VERSION_PATCH}")
+
+option(NOCTURNE_TESTING "enable unittests" OFF)
+option(NOCTURNE_VST3 "enable vst3 plugins" ON)
+option(NOCTURNE_DEBUG "enable debug version" ON)
+option(NOCTURNE_WASAPI "enable wasapi audio on windows" OFF)
+option(NOCTURNE_JACK "enable jackd audio system" OFF)
+
+
+set(NOCTURNE_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/include")
+set(NOCTURNE_BINARY_INCLUDE_PATH "${CMAKE_BINARY_DIR}/include")
+
+set(SDK_IDE_LIBS_FOLDER FOLDER "lib")
+
+if (NOCTURNE_VST3)
+    set(NOCTURNE_PLUGINSYSTEM_VST3 ON)
+    set(NOCTURNE_VST3SDK "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/vst3sdk")
+    set(vstsdk_VERSION 3.7.8)
+    set(SMTG_CREATE_MODULE_INFO OFF CACHE BOOL "" FORCE)
+    set(SDK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/vst3sdk")
+    set(public_sdk_SOURCE_DIR ${SDK_ROOT}/public.sdk)
+    set(VST_SDK TRUE)
+    set(SMTG_CREATE_PLUGIN_LINK FALSE)
+    set(SDK_IDE_PLUGIN_EXAMPLES_FOLDER FOLDER "PlugInExamples")
+    set(SUFFIX_CONFIG_TYPE $<IF:$<CONFIG:Debug>,Debug,Release>)
+
+    add_definitions(-DDEVELOPMENT)
+
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/vst3sdk/cmake/modules")
+    include(cmake/custom_functions.cmake)
+    include(SMTG_VST3_SDK)
+    include(SMTG_CustomModuleTarget)
+    include_directories(${SDK_ROOT})
+    smtg_setup_platform_toolset()
+    add_subdirectory(3rdparty/vst3sdk/pluginterfaces)
+    add_subdirectory(3rdparty/vst3sdk/base)
+    add_subdirectory(3rdparty/vst3sdk/public.sdk)
+    add_subdirectory(3rdparty/vst3sdk/public.sdk/samples/vst/adelay)
+
+    set_target_properties(sdk PROPERTIES ${SDK_IDE_LIBS_FOLDER})
+    set_target_properties(sdk_common PROPERTIES ${SDK_IDE_LIBS_FOLDER})
+    set_target_properties(sdk_hosting PROPERTIES ${SDK_IDE_LIBS_FOLDER})
+    set_target_properties(base PROPERTIES ${SDK_IDE_LIBS_FOLDER})
+    set_target_properties(pluginterfaces PROPERTIES ${SDK_IDE_LIBS_FOLDER})
+    set_target_properties(cmake_modules PROPERTIES ${SDK_IDE_LIBS_FOLDER})
+endif ()
+
+find_package(plog CONFIG REQUIRED)
+find_package(Qt6 COMPONENTS Core Gui Widgets CONFIG REQUIRED)
+qt_standard_project_setup()
+
+if (NOCTURNE_TESTING)
+    find_package(GTest CONFIG REQUIRED)
+endif ()
+
+if (NOCTURNE_VST3)
+    if (NOCTURNE_DEBUG)
+        if (WIN32)
+            list(APPEND NOCTURNE_VST3SDK_LINKER_PATH "${NOCTURNE_VST3SDK}/build/lib/Debug")
+        elseif (LINUX)
+            list(APPEND NOCTURNE_VST3SDK_LINKER_PATH "${NOCTURNE_VST3SDK}/build/lib")
+        endif ()
+    else ()
+        if (WIN32)
+            list(APPEND NOCTURNE_VST3SDK_LINKER_PATH "${NOCTURNE_VST3SDK}/build/lib/Release")
+        elseif (LINUX)
+            list(APPEND NOCTURNE_VST3SDK_LINKER_PATH "${NOCTURNE_VST3SDK}/build/lib")
+        endif ()
+    endif ()
+
+    set(NOCTURNE_VST3_INCLUDE_PATH "${NOCTURNE_INCLUDE_PATH}/nocturne/vst3")
+endif ()
+
+include_directories(${NOCTURNE_INCLUDE_PATH} ${NOCTURNE_BINARY_INCLUDE_PATH} ${QT6_INCLUDE_PATH} ${NOCTURNE_VST3_INCLUDE_PATH})
+
+if (WIN32)
+    set(NOCTURNE_WINDOWS 1)
+elseif (UNIX)
+    set(NOCTURNE_LINUX 1)
+elseif (MACOS)
+    set(NOCTURNE_MACOS 1)
+else ()
+    message(FATAL_ERROR "Platform not supported")
+endif ()
+
+configure_file(include/nocturne/config.hpp.in ${CMAKE_BINARY_DIR}/include/nocturne/config.hpp)
+
+add_subdirectory(src)

@@ -1,0 +1,11 @@
+#ifdef NOCTURNE_CONFIG_HPP
+#define NOCTURNE_CONFIG_HPP
+
+#cmakedefine NOCTURNE_WASAPI
+#cmakedefine NOCTURNE_JACK
+#cmakedefine NOCTURNE_WINDOWS
+#cmakedefine NOCTURNE_LINUX
+#cmakedefine NOCTURNE_DEBUG
+#cmakedefine NOCTURNE_PLUGINSYSTEM_VST3
+
+#endif
