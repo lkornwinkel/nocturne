@@ -6,8 +6,12 @@
 #include <nocturne/linux/linux_module.hpp>
 #include <iostream>
 
+#include <QApplication>
+#include <QWidget>
 
 int main(int argc, char **argv) {
+    QApplication app{argc, argv};
+
     static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
     plog::init(plog::verbose, &consoleAppender);
 
@@ -17,8 +21,12 @@ int main(int argc, char **argv) {
     auto module = nocturne::LinuxModule{};
 //    nocturne::Host host;
 //    bool loaded = plugin.load(host, "/home/lars/.vst3/u-he/Podolski.vst3");
-    bool loaded = module.load("/home/lars/.vst3/u-he/Podolski.vst3");
+    QWidget widget{};
+    widget.show();
+    bool loaded = module.load("/home/lars/.vst3/u-he/Podolski.vst3", widget.winId());
     std::cout << loaded << std::endl;
-    module.list_classes();
+
+
+    return QApplication::exec();
 
 }

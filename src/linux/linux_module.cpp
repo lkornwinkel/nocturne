@@ -1,6 +1,8 @@
 #include <nocturne/imodule.hpp>
 #include <nocturne/iplatform.hpp>
 #include <nocturne/linux/linux_module.hpp>
+#include <nocturne/vst3/vst3_headers.hpp>
+#include <nocturne/vst3/vst3_plug_view.hpp>
 
 #include <filesystem>
 #include <optional>
@@ -10,7 +12,7 @@
 
 #include <plog/Log.h>
 
-#include <nocturne/vst3/vst3_headers.hpp>
+#include <QWidget>
 
 namespace nocturne {
     typedef Steinberg::IPluginFactory *(PLUGIN_API *GetFactoryProc)();
@@ -47,7 +49,7 @@ namespace nocturne {
         return {std::move(modulePath)};
     }
 
-    bool LinuxModule::load(const std::string &path) {
+    bool LinuxModule::load(const std::string &path, WId parent) {
         auto module_path = getSOPath(path);
         if (!module_path) {
             PLOG(plog::error) << "unable to find module: " << *module_path;
@@ -92,6 +94,26 @@ namespace nocturne {
         auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory>(Steinberg::owned(factory_proc()));
 
         m_factory = VST3::Hosting::PluginFactory{f};
+        m_context = std::make_unique<vst3::HostContext>("nocturne");
+        m_factory.setHostContext(m_context->unknownCast());
+        Steinberg::PClassInfo class_info;
+        m_factory.get()->getClassInfo(0, &class_info);
+        Steinberg::FUnknown *instance{nullptr};
+        m_plug_view = std::make_unique<vst3::PlugView>();
+        Steinberg::tresult result = m_factory.get()->createInstance(class_info.cid, Steinberg::FUnknown::iid,
+                                                                    reinterpret_cast<void **>(&instance));
+        if (result != Steinberg::kResultOk) {
+            PLOG(plog::fatal) << "unable to create instance: " << class_info.name;
+
+            return false;
+        }
+
+        result = m_plug_view->attached((void *) parent, Steinberg::kPlatformTypeX11EmbedWindowID);
+        if (result != Steinberg::kResultOk) {
+            PLOG(plog::fatal) << "unable to attach view: " << class_info.name;
+
+            return false;
+        }
 
         return true;
 
@@ -103,7 +125,6 @@ namespace nocturne {
             m_factory.get()->getClassInfo(i, &class_info);
 
             std::cout << class_info.name << ":" << class_info.category << std::endl;
-            m_factory.
         }
     }
 

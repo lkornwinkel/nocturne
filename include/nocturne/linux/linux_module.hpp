@@ -2,8 +2,11 @@
 #define NOCTURNE_LINUX_MODULE_HPP
 
 #include <nocturne/imodule.hpp>
-
+#include <nocturne/vst3/vst3_host_context.hpp>
 #include <nocturne/vst3/vst3_headers.hpp>
+#include <nocturne/vst3/vst3_plug_view.hpp>
+
+#include <QWidget>
 
 #include <dlfcn.h>
 
@@ -12,11 +15,15 @@ namespace nocturne {
     private:
         void *m_module{nullptr};
         VST3::Hosting::PluginFactory m_factory{nullptr};
-
+        std::unique_ptr<vst3::HostContext> m_context{nullptr};
+        std::unique_ptr<vst3::PlugView> m_plug_view{nullptr};
     public:
         LinuxModule() = default;
 
-        bool load(const std::string &path) override;
+        ~LinuxModule() override = default;
+
+        bool load(const std::string &path, WId parent) override;
+
 
         void list_classes();
 
