@@ -3,8 +3,13 @@
 
 #include <nocturne/vst3/vst3_headers.hpp>
 
+#include <QWindow>
+
 namespace nocturne::vst3 {
     class PlugView : public Steinberg::IPlugView {
+    protected:
+        QWindow *m_pluginWindow;
+
     public:
         Steinberg::uint32 addRef() override;
 

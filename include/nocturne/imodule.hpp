@@ -10,7 +10,8 @@ namespace nocturne {
     public:
         virtual ~IModule() = default;
 
-        virtual bool load(std::string const &path, WId parent) = 0;
+        virtual bool load(std::string const &path) = 0;
+        virtual bool setVisibile(bool visible) = 0;
     };
 }
 #endif //NOCTURNE_IMODULE_HPP

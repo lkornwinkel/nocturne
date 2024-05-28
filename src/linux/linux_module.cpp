@@ -128,4 +128,8 @@ namespace nocturne {
         }
     }
 
+    bool LinuxModule::setVisibile(bool visible) {
+        return false;
+    }
+
 }

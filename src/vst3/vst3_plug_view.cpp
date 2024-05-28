@@ -2,6 +2,7 @@
 
 #include <plog/Log.h>
 
+#include <QWindow>
 namespace nocturne::vst3 {
     Steinberg::tresult PlugView::isPlatformTypeSupported(Steinberg::FIDString type) {
         PLOG(plog::debug) << __PRETTY_FUNCTION__;
@@ -10,6 +11,10 @@ namespace nocturne::vst3 {
 
     Steinberg::tresult PlugView::attached(void *parent, Steinberg::FIDString type) {
         PLOG(plog::debug) << __PRETTY_FUNCTION__;
+
+        m_pluginWindow = QWindow::fromWinId(reinterpret_cast<WId>(parent));
+        m_pluginWindow->resize(1024, 768);
+        m_pluginWindow->show();
         return 0;
     }
 

@@ -22,8 +22,9 @@ namespace nocturne {
 
         ~LinuxModule() override = default;
 
-        bool load(const std::string &path, WId parent) override;
+        bool load(const std::string &path) override;
 
+        bool setVisibile(bool visible) override;
 
         void list_classes();
 
